@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:test}",
+            "name": "Debug iqos_cli",
+            "program": "${workspaceFolder:test}/.build/debug/iqos_cli",
+            "preLaunchTask": "swift: Build Debug iqos_cli"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:test}",
+            "name": "Release iqos_cli",
+            "program": "${workspaceFolder:test}/.build/release/iqos_cli",
+            "preLaunchTask": "swift: Build Release iqos_cli"
+        }
+    ]
+}
