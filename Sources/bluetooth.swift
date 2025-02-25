@@ -5,6 +5,7 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var centralManager: CBCentralManager!
     private var discoveredPeripheral: CBPeripheral?
     private var connectedIqos: CBPeripheral?
+    private var iqos: IQOS?
     
     override init() {
         super.init()
@@ -50,15 +51,58 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 	}
 
 	func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-		print("Connected to \(peripheral.name ?? "Unknown").")
+		print("Connected to \(peripheral.name ?? "Unknown")")
 		peripheral.delegate = self
         self.connectedIqos = peripheral
+        self.iqos = IQOS(name: peripheral.name ?? "Unknown")
 		peripheral.discoverServices(nil)
 	}
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         print("Failed to connect to \(peripheral.name ?? "Unknown")")
         return
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        guard let services = peripheral.services else { print("Unable to discover services:"); return }
+        for service in services {
+            print("Discovered service \(service.uuid)")
+            // if service.uuid == CBUUID(string: "DAEBB240-B041-11E4-9E45-0002A5D5C51B") {
+            // if service.uuid.uuidString == "180A" {
+            //     peripheral.discoverCharacteristics(nil, for: service)
+            // }
+            peripheral.discoverCharacteristics(nil, for: service)
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        guard let characteristics = service.characteristics else { print("Unable to discover characteristics:"); return }
+        for characteristic in characteristics {
+            print("Discovered characteristic \(characteristic.uuid)")
+            print("value: ", peripheral.readValue(for: characteristic))
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
+        guard let descriptors = characteristic.descriptors else { print("Unable to discover descriptors:"); return }
+        for descriptor in descriptors {
+            print("Discovered descriptor \(descriptor.uuid)")
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        // switch "\(characteristic.uuid)"
+        // {
+        //     case "Model Number String":
+        //         self.iqos?.modelNumber = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
+        //     default:
+        //         print("Unknown characteristic \(characteristic.uuid)")
+        // }
+        print("Updated value for characteristic \(characteristic.uuid)")
+        print("value: ", characteristic.value ?? "nil")
+        print("properties: ", characteristic.properties) 
+        print("binary value: ", characteristic.value?.map { String(format: "%02hhx", $0) } ?? "nil")
+        print("string value: ", String(decoding: characteristic.value ?? Data(), as: UTF8.self) ?? "nil", "\n")
     }
 
     func run() {
