@@ -78,8 +78,7 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard let characteristics = service.characteristics else { print("Unable to discover characteristics:"); return }
         for characteristic in characteristics {
-            print("Discovered characteristic \(characteristic.uuid)")
-            print("value: ", peripheral.readValue(for: characteristic))
+            peripheral.readValue(for: characteristic)
         }
     }
 
@@ -91,16 +90,28 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        // switch "\(characteristic.uuid)"
-        // {
-        //     case "Model Number String":
-        //         self.iqos?.modelNumber = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
-        //     default:
-        //         print("Unknown characteristic \(characteristic.uuid)")
-        // }
+        switch "\(characteristic.uuid)"
+        {
+            case "Model Number String":
+                self.iqos?.modelNumber = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
+
+            // for charger battery capacity
+            case "F8A54120-B041-11E4-9BE7-0002A5D5C51B":
+                // example
+                // ["0f", "00", "4b", "18", "54", "0f", "64"]
+                //               ↑ indicate battery level
+
+                if let batteryCap = characteristic.value?[2] {
+                    self.iqos?.chargerBatteryCapacity = batteryCap
+                }
+                print("battery: ", self.iqos?.chargerBatteryCapacity ?? "nil")
+            default:
+                print("Unknown characteristic \(characteristic.uuid)")
+        }
         print("Updated value for characteristic \(characteristic.uuid)")
         print("value: ", characteristic.value ?? "nil")
         print("properties: ", characteristic.properties) 
+        print("enc", characteristic.properties.contains(.write))
         print("binary value: ", characteristic.value?.map { String(format: "%02hhx", $0) } ?? "nil")
         print("string value: ", String(decoding: characteristic.value ?? Data(), as: UTF8.self) ?? "nil", "\n")
     }
