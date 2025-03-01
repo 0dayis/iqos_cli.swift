@@ -56,6 +56,9 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         self.connectedIqos = peripheral
         self.iqos = IQOS(name: peripheral.name ?? "Unknown")
 		peripheral.discoverServices(nil)
+        // peripheral.discoverServices([CBUUID(string: "1bc5d5a5-0200-459e-e411-41b0-40b2ebda")])
+        // peripheral.discoverServices([CBUUID(string: "Client Characteristic Configuration")])
+        // peripheral.discoverServices([CBUUID(string: "1800")])
 	}
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
@@ -66,12 +69,39 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let services = peripheral.services else { print("Unable to discover services:"); return }
         for service in services {
-            print("Discovered service \(service.uuid)")
+            // serviceのUUIDは種類を示す
+            print("Service: \(service.uuid)")
+            // handleは抽象化されている
+            print("UUID String \(service.uuid.uuidString)")
+            print("ancs: \(peripheral.state)")
+            print("summary: \(peripheral.canSendWriteWithoutResponse)")
+            // print("service description \(service.description)")
+            peripheral.discoverIncludedServices(nil, for: service)
             // if service.uuid == CBUUID(string: "DAEBB240-B041-11E4-9E45-0002A5D5C51B") {
             // if service.uuid.uuidString == "180A" {
             //     peripheral.discoverCharacteristics(nil, for: service)
             // }
             peripheral.discoverCharacteristics(nil, for: service)
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverIncludedServicesFor service: CBService, error: Error?) {
+        guard let includedServices = service.includedServices else { print("Unable to discover included services:"); return }
+        for includedService in includedServices {
+            print("Discovered included service \(includedService.uuid)")
+        }
+        if let error = error {
+        print("セカンダリサービス探索失敗: \(error.localizedDescription)")
+        return
+        }
+
+        guard let includedServices = service.includedServices else {
+            print("サービス \(service.uuid) にセカンダリサービスはありません。")
+            return
+        }
+
+        for includedService in includedServices {
+            print("セカンダリサービス発見: \(includedService.uuid)")
         }
     }
 
@@ -83,10 +113,12 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
-        guard let descriptors = characteristic.descriptors else { print("Unable to discover descriptors:"); return }
-        for descriptor in descriptors {
-            print("Discovered descriptor \(descriptor.uuid)")
-        }
+        // guard let descriptors = characteristic.descriptors else { print("Unable to discover descriptors:"); return }
+        // for descriptor in descriptors {
+        //     // print("Discovered descriptor \(descriptor.uuid)")
+            // print("Discovered descriptor \(descriptor.value ?? "nil")")
+            // print("Discovered descriptor \(descriptor.description)")
+        // }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -105,15 +137,40 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                     self.iqos?.chargerBatteryCapacity = batteryCap
                 }
                 print("battery: ", self.iqos?.chargerBatteryCapacity ?? "nil")
+
+            case "E16C6E20-B041-11E4-A4C3-0002A5D5C51B":
+                let first: Data = Data([0x00, 0xc0, 0x01, 0x21, 0xf2])
+                let second: Data = Data([0x00, 0xc0, 0x00, 0x00, 0x01, 0x07])
+                let third: Data = Data([0x00, 0xc0, 0x04, 0x06, 0x01, 0x00, 0x00, 0x00, 0xf9])
+                let fourth: Data = Data([0x00, 0xc0, 0x01, 0x00, 0x15])
+                let fifth: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x64, 0x00, 0x00, 0x00, 0x4f])
+                print("writing to \(characteristic.uuid)...")
+                peripheral.writeValue(first, for: characteristic, type: CBCharacteristicWriteType.withResponse)
+                peripheral.writeValue(second, for: characteristic, type: CBCharacteristicWriteType.withResponse)
+                peripheral.writeValue(third, for: characteristic, type: CBCharacteristicWriteType.withResponse)
+                peripheral.writeValue(fourth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
+                peripheral.writeValue(fifth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
+
             default:
                 print("Unknown characteristic \(characteristic.uuid)")
         }
         print("Updated value for characteristic \(characteristic.uuid)")
         print("value: ", characteristic.value ?? "nil")
         print("properties: ", characteristic.properties) 
-        print("enc", characteristic.properties.contains(.write))
+        print("can send write without response: ", peripheral.canSendWriteWithoutResponse)
+        // print("descryptor",  peripheral.discoverDescriptors(for: characteristic))
+        // print("enc", characteristic.properties.contains(.write))
+        print("desscription", characteristic.description)
         print("binary value: ", characteristic.value?.map { String(format: "%02hhx", $0) } ?? "nil")
         print("string value: ", String(decoding: characteristic.value ?? Data(), as: UTF8.self) ?? "nil", "\n")
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        if let error = error {
+            print("Failed to write value for \(characteristic.uuid): \(error.localizedDescription)")
+            return
+        }
+        print("Successfully wrote value for \(characteristic.uuid)")
     }
 
     func run() {
