@@ -3,7 +3,7 @@
 import Foundation
 
 @main
-struct IqosCli {
+struct IQOSCli {
     static func main() {
         let bluetoothCLI = BluetoothCLI()
         while true {
