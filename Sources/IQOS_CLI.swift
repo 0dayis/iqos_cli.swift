@@ -16,10 +16,6 @@ struct IQOSCli {
             // print("command> ", terminator: "")
 
     }
-
-    func run() {
-
-    }
 }
 
 	
