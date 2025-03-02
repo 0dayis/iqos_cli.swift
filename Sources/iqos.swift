@@ -10,7 +10,7 @@ class IQOS: NSObject {
     var chargerBatteryState: UInt8 = 0
     var scpCharacteristicUUID: CBUUID?
     var peripheral: CBPeripheral?
-    private var scp_chara: CBCharacteristic?
+    var scp_chara: CBCharacteristic?
 
     func setChargerBattery(characteristic: CBCharacteristic) {
         chargerBatteryState = characteristic.value![2]
@@ -41,20 +41,11 @@ class IQOS: NSObject {
             default:
                 print("Unknown characteristic \(characteristic.uuid)")
         }
-        print("Updated value for characteristic \(characteristic.uuid)")
-        print("value: ", characteristic.value ?? "nil")
-        print("properties: ", characteristic.properties) 
-        // print("can send write without response: ", peripheral.canSendWriteWithoutResponse)
-        // print("descryptor",  peripheral.discoverDescriptors(for: characteristic))
-        // print("enc", characteristic.properties.contains(.write))
-        // print("desscription", characteristic.description)
-        print("binary value: ", characteristic.value?.map { String(format: "%02hhx", $0) } ?? "nil")
-        print("string value: ", String(decoding: characteristic.value ?? Data(), as: UTF8.self) ?? "nil", "\n")
     }
 }
 
 class IQOSIlumaI: IQOS {
-    func toBrightnessHigh(peripheral: CBPeripheral, characteristic: CBCharacteristic) {
+    func toBrightnessHigh() {
         // let first: Data = Data([0x00, 0xc0, 0x01, 0x21, 0xf2])
         // let second: Data = Data([0x00, 0xc0, 0x00, 0x00, 0x01, 0x07])
         // let third: Data = Data([0x00, 0xc0, 0x04, 0x06, 0x01, 0x00, 0x00, 0x00, 0xf9])
@@ -66,31 +57,32 @@ class IQOSIlumaI: IQOS {
         // peripheral.writeValue(fourth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
         // peripheral.writeValue(fifth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
         let payload: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x64, 0x00, 0x00, 0x00, 0x4f])
-        peripheral.writeValue(payload, for: characteristic, type: .withResponse)
+        peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
     }
 
-    func toBrightnessLow(peripheral: CBPeripheral, characteristic: CBCharacteristic) {
+    func toBrightnessLow() {
         let payload: Data = Data([0x00, 0x08, 0x84, 0x24, 0x1e, 0x00, 0x00, 0x00, 0x00])
-        peripheral.writeValue(payload, for: characteristic, type: .withResponse)
+        peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
     }
 
-    func enableSmartgesture(peripheral: CBPeripheral, characteristic: CBCharacteristic) {
+    func enableSmartgesture() {
         let first: Data = Data([0x00, 0xc9, 0x48, 0x05, 0x3c, 0x05, 0x01, 0x00, 0x00, 0x01, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0xc0])
-        peripheral.writeValue(first, for: characteristic, type: .withResponse)
         let second: Data = Data([0x00, 0xc9, 0x04, 0x05, 0x05, 0x01, 0x00, 0x00, 0x6c])
-        peripheral.writeValue(second, for: characteristic, type: .withResponse)
         let third: Data = Data([0x00, 0xc9, 0x44, 0x05, 0x00, 0xff, 0xff, 0x00, 0xc3])
-        peripheral.writeValue(third, for: characteristic, type: .withResponse)
+
+        peripheral?.writeValue(first, for: scp_chara!, type: .withResponse)
+        peripheral?.writeValue(second, for: scp_chara!, type: .withResponse)
+        peripheral?.writeValue(third, for: scp_chara!, type: .withResponse)
     }
-    func disableSmartgesture(peripheral: CBPeripheral, characteristic: CBCharacteristic) {
+    func disableSmartgesture() {
         // 21:47:70100
         let first: Data = Data([0x00, 0xc9, 0x48, 0x05, 0x2f, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0xeb])
-        peripheral.writeValue(first, for: characteristic, type: .withResponse)
         let second: Data = Data([0x00, 0xc9, 0x44, 0x05, 0x00, 0xff, 0xff, 0x00, 0xc3])
-        peripheral.writeValue(second, for: characteristic, type: .withResponse)
         let third: Data = Data([0x00, 0xc9, 0x04, 0x05, 0x05, 0x01, 0x00, 0x00, 0x6c])
-        peripheral.writeValue(third, for: characteristic, type: .withResponse)
+
+        peripheral?.writeValue(first, for: scp_chara!, type: .withResponse)
+        peripheral?.writeValue(second, for: scp_chara!, type: .withResponse)
+        peripheral?.writeValue(third, for: scp_chara!, type: .withResponse)
         // peripheral.writeValue(payload, for: characteristic, type: .withResponse)
     }
-       // build(from ) {}
 }
