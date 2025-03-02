@@ -5,8 +5,8 @@ import Foundation
 @main
 struct IQOSCli {
     static func main() {
-        let bluetoothCLI = BluetoothCLI()
-        while true {
+        let cli = Cli.init()
+        cli.run()
             // print("\n--- IQOS CLI ---")
             // print("1: Start Scanning")
             // print("2: Stop Scanning")
@@ -15,8 +15,10 @@ struct IQOSCli {
 
             // print("command> ", terminator: "")
 
-            bluetoothCLI.run()
-        }
+    }
+
+    func run() {
+
     }
 }
 
