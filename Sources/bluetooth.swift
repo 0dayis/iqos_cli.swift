@@ -3,9 +3,15 @@ import Foundation
 
 class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var centralManager: CBCentralManager!
-    private var discoveredPeripheral: CBPeripheral?
+    var discoveredPeripheral: CBPeripheral?
+    var discoveredCharacteristics: [CBCharacteristic] = []
     private var connectedIqos: CBPeripheral?
-    private var iqos: IQOS?
+    var iqos: IQOS = IQOS()
+    var iqosIlumaI: IQOSIlumaI = IQOSIlumaI()
+    
+    private var onConnected: (() -> Void)?
+    private var onDiscovered: (() -> Void)?
+    var onDone: (() -> Void)?
     
     override init() {
         super.init()
@@ -20,6 +26,11 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func stopScan() {
         centralManager.stopScan()
         print("Stopped scan.")
+    }
+
+    func discover() {
+        guard let peripheral = discoveredPeripheral else { return }
+        peripheral.discoverServices(nil)
     }
     
     func connectToDevice(named deviceName: String) {
@@ -54,8 +65,8 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 		print("Connected to \(peripheral.name ?? "Unknown")")
 		peripheral.delegate = self
         self.connectedIqos = peripheral
-        self.iqos = IQOS(name: peripheral.name ?? "Unknown")
-		peripheral.discoverServices(nil)
+        self.iqos.peripheral = peripheral
+        onConnected?()
         // peripheral.discoverServices([CBUUID(string: "1bc5d5a5-0200-459e-e411-41b0-40b2ebda")])
         // peripheral.discoverServices([CBUUID(string: "Client Characteristic Configuration")])
         // peripheral.discoverServices([CBUUID(string: "1800")])
@@ -69,18 +80,7 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let services = peripheral.services else { print("Unable to discover services:"); return }
         for service in services {
-            // serviceのUUIDは種類を示す
-            print("Service: \(service.uuid)")
-            // handleは抽象化されている
-            print("UUID String \(service.uuid.uuidString)")
-            print("ancs: \(peripheral.state)")
-            print("summary: \(peripheral.canSendWriteWithoutResponse)")
-            // print("service description \(service.description)")
             peripheral.discoverIncludedServices(nil, for: service)
-            // if service.uuid == CBUUID(string: "DAEBB240-B041-11E4-9E45-0002A5D5C51B") {
-            // if service.uuid.uuidString == "180A" {
-            //     peripheral.discoverCharacteristics(nil, for: service)
-            // }
             peripheral.discoverCharacteristics(nil, for: service)
         }
     }
@@ -108,8 +108,9 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard let characteristics = service.characteristics else { print("Unable to discover characteristics:"); return }
         for characteristic in characteristics {
-            peripheral.readValue(for: characteristic)
+            discoveredCharacteristics.append(characteristic)
         }
+        onDiscovered?()
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
@@ -122,47 +123,10 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        switch "\(characteristic.uuid)"
-        {
-            case "Model Number String":
-                self.iqos?.modelNumber = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
-
-            // for charger battery capacity
-            case "F8A54120-B041-11E4-9BE7-0002A5D5C51B":
-                // example
-                // ["0f", "00", "4b", "18", "54", "0f", "64"]
-                //               ↑ indicate battery level
-
-                if let batteryCap = characteristic.value?[2] {
-                    self.iqos?.chargerBatteryCapacity = batteryCap
-                }
-                print("battery: ", self.iqos?.chargerBatteryCapacity ?? "nil")
-
-            case "E16C6E20-B041-11E4-A4C3-0002A5D5C51B":
-                let first: Data = Data([0x00, 0xc0, 0x01, 0x21, 0xf2])
-                let second: Data = Data([0x00, 0xc0, 0x00, 0x00, 0x01, 0x07])
-                let third: Data = Data([0x00, 0xc0, 0x04, 0x06, 0x01, 0x00, 0x00, 0x00, 0xf9])
-                let fourth: Data = Data([0x00, 0xc0, 0x01, 0x00, 0x15])
-                let fifth: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x64, 0x00, 0x00, 0x00, 0x4f])
-                print("writing to \(characteristic.uuid)...")
-                peripheral.writeValue(first, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-                peripheral.writeValue(second, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-                peripheral.writeValue(third, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-                peripheral.writeValue(fourth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-                peripheral.writeValue(fifth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-
-            default:
-                print("Unknown characteristic \(characteristic.uuid)")
+        if let error = error {
+            print("Failed to read value for \(characteristic.uuid): \(error.localizedDescription)")
+            return
         }
-        print("Updated value for characteristic \(characteristic.uuid)")
-        print("value: ", characteristic.value ?? "nil")
-        print("properties: ", characteristic.properties) 
-        print("can send write without response: ", peripheral.canSendWriteWithoutResponse)
-        // print("descryptor",  peripheral.discoverDescriptors(for: characteristic))
-        // print("enc", characteristic.properties.contains(.write))
-        print("desscription", characteristic.description)
-        print("binary value: ", characteristic.value?.map { String(format: "%02hhx", $0) } ?? "nil")
-        print("string value: ", String(decoding: characteristic.value ?? Data(), as: UTF8.self) ?? "nil", "\n")
     }
 
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -174,7 +138,17 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func run() {
-        RunLoop.main.run()
+        onConnected = {
+            print("Gathering IQOS data...")
+            self.discover()
+            self.onDiscovered = {
+                _ = self.discoveredCharacteristics.map { self.iqosIlumaI.build(characteristic: $0) }
+                self.onDone?()
+                // self.discoveredCharacteristics.forEach { characteristic in
+                //     self.iqosIlumaI.build(characteristic: characteristic)
+                // }
+            }
+        }
     }
     
 }
