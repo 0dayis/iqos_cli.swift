@@ -142,7 +142,7 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             print("Gathering IQOS data...")
             self.discover()
             self.onDiscovered = {
-                _ = self.discoveredCharacteristics.map { self.iqosIlumaI.build(characteristic: $0) }
+                _ = self.discoveredCharacteristics.map { self.iqosIlumaI.initFromCharacteristic(characteristic: $0) }
                 self.onDone?()
                 // self.discoveredCharacteristics.forEach { characteristic in
                 //     self.iqosIlumaI.build(characteristic: characteristic)

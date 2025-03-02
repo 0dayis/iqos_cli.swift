@@ -21,7 +21,7 @@ class IQOS: NSObject {
     }
     var fullyfilledHandler: (() -> Void)?
 
-    func build(characteristic: CBCharacteristic) {
+    func initFromCharacteristic(characteristic: CBCharacteristic) {
         switch "\(characteristic.uuid)"
         {
             case "Model Number String", "Serial Number String", "Software Revision String", "Manufacturer Name String":
