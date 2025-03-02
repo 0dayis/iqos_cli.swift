@@ -6,4 +6,4 @@ DerivedData/
 .swiftpm/configuration/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
->>>>>>> b6d6da2 (Add initial project setup with Bluetooth CLI functionality and configuration files)
+*.log
