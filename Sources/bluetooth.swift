@@ -1,15 +1,32 @@
 import CoreBluetooth
 import Foundation
 
+class Service {
+    var cbService: CBService
+    var isDiscovered: Bool = false
+    var handler = { () -> Void in }
+
+    init(cbService: CBService) {
+        self.cbService = cbService
+    }
+}
+
 class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var centralManager: CBCentralManager!
+
     var discoveredPeripheral: CBPeripheral?
+    private var discoveredServices: [Service] = []
     var discoveredCharacteristics: [CBCharacteristic] = []
+
     private var connectedIqos: CBPeripheral?
     var iqos: IQOS = IQOS()
     var iqosIlumaI: IQOSIlumaI = IQOSIlumaI()
     
+    // Handlers
     private var onConnected: (() -> Void)?
+    private var onServicesDiscovered: (() -> Void)?
+    private var onCharacteristicsDiscovered: (() -> Void)?
+    private var onDiscoveredCharacteristics: (() -> Void)?
     private var onDiscovered: (() -> Void)?
     var onDone: (() -> Void)?
     
@@ -28,15 +45,35 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         print("Stopped scan.")
     }
 
+    func discoverServices(peripheral: CBPeripheral) {
+        discoveredServices.forEach { service in
+            peripheral.discoverCharacteristics(nil, for: service.cbService)
+            peripheral.discoverIncludedServices(nil, for: service.cbService)
+        }
+    }
+
     func discover() {
-        guard let peripheral = discoveredPeripheral else { return }
-        peripheral.discoverServices(nil)
+        iqosIlumaI.peripheral?.discoverServices(nil)
+
+        onServicesDiscovered = {
+            self.discoverServices(peripheral: self.iqosIlumaI.peripheral!)
+            self.onCharacteristicsDiscovered = {
+                self.onDiscovered?()
+            }
+        //     print("Discovered services: \(self.discoveredServices)")
+        //     self.discoverServices(peripheral: peripheral)
+
+        //     self.onDiscoveredCharacteristics = {
+        //         print("Discovered characteristics: \(self.discoveredCharacteristics)")
+        //         self.discoverCharacteristics(peripheral: peripheral)
+        //         self.onDiscovered?()
+        //     }
+        }
     }
     
     func connectToDevice(named deviceName: String) {
         centralManager.scanForPeripherals(withServices: nil, options: nil)
         print("Scanning for \(deviceName)...")
-        discoveredPeripheral = nil  // Ensure no previous device is retained
     }
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -55,8 +92,8 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
 		if let name = peripheral.name, name.starts(with: "IQOS") {
 			print("Found target device \(name), connecting...")
-			discoveredPeripheral = peripheral
-			centralManager.stopScan()
+            iqosIlumaI.peripheral = peripheral
+            centralManager.stopScan()
 			centralManager.connect(peripheral, options: nil)
 		}
 	}
@@ -80,9 +117,10 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let services = peripheral.services else { print("Unable to discover services:"); return }
         for service in services {
-            peripheral.discoverIncludedServices(nil, for: service)
-            peripheral.discoverCharacteristics(nil, for: service)
+            let s =  Service(cbService: service)
+            self.discoveredServices.append(s)
         }
+        onServicesDiscovered?()
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverIncludedServicesFor service: CBService, error: Error?) {
@@ -109,8 +147,12 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         guard let characteristics = service.characteristics else { print("Unable to discover characteristics:"); return }
         for characteristic in characteristics {
             discoveredCharacteristics.append(characteristic)
+            discoveredServices.first(where: { $0.cbService == service })?.isDiscovered = true
         }
-        onDiscovered?()
+
+        if discoveredServices.allSatisfy({ $0.isDiscovered }) {
+            onCharacteristicsDiscovered?()
+        }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
@@ -142,11 +184,11 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             print("Gathering IQOS data...")
             self.discover()
             self.onDiscovered = {
-                _ = self.discoveredCharacteristics.map { self.iqosIlumaI.initFromCharacteristic(characteristic: $0) }
+                // _ = self.discoveredCharacteristics.map { self.iqosIlumaI.initFromCharacteristic(characteristic: $0) }
+                self.discoveredCharacteristics.forEach { characteristic in
+                    self.iqosIlumaI.initFromCharacteristic(characteristic: characteristic)
+                }
                 self.onDone?()
-                // self.discoveredCharacteristics.forEach { characteristic in
-                //     self.iqosIlumaI.build(characteristic: characteristic)
-                // }
             }
         }
     }
