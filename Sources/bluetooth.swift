@@ -1,5 +1,6 @@
 import CoreBluetooth
 import Foundation
+import SwiftTUI
 
 class Service {
     var cbService: CBService
@@ -13,6 +14,17 @@ class Service {
 
 class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     private var centralManager: CBCentralManager!
+    // private var boot = BootView()
+    // var bootCon: BootContent
+    // var mainCon: MainContent
+    // var container: Dashboard<BootContent, MainContent>
+    var container = Dashboard(title: "IQOS CLI")
+    // var container: Dashboard<BootContent, MainContent>
+    // var _: ContainerView<BootView> {
+    //     ContainerView(title: "IQOS CLI") {
+    //         view
+    //     }
+    // }
 
     var discoveredPeripheral: CBPeripheral?
     private var discoveredServices: [Service] = []
@@ -36,13 +48,15 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
     
     func startScan() {
-        print("Scanning...")
+        // print("Scanning...")
+        container.boot.addMsg(Message(text: "Scanning..."))
         centralManager.scanForPeripherals(withServices: nil, options: nil)
     }
     
     func stopScan() {
         centralManager.stopScan()
-        print("Stopped scan.")
+        // print("Stopped scan.")
+        container.boot.addMsg(Message(text: "Stopped scan."))
     }
 
     func discoverServices(peripheral: CBPeripheral) {
@@ -73,7 +87,8 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     func connectToDevice(named deviceName: String) {
         centralManager.scanForPeripherals(withServices: nil, options: nil)
-        print("Scanning for \(deviceName)...")
+        // print("Scanning for \(deviceName)...")
+        container.boot.addMsg(Message(text: "Scanning for \(deviceName)"))
     }
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -91,7 +106,8 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 	) {
 
 		if let name = peripheral.name, name.starts(with: "IQOS") {
-			print("Found target device \(name), connecting...")
+			// print("Found target device \(name), connecting...")
+            container.boot.addMsg(Message(text: "Found target device \(name), connecting..."))
             iqosIlumaI.peripheral = peripheral
             centralManager.stopScan()
 			centralManager.connect(peripheral, options: nil)
@@ -99,7 +115,8 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 	}
 
 	func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-		print("Connected to \(peripheral.name ?? "Unknown")")
+		// print("Connected to \(peripheral.name ?? "Unknown")")
+        container.boot.addMsg(Message(text: "Connected to \(peripheral.name ?? "Unknown")"))
 		peripheral.delegate = self
         self.connectedIqos = peripheral
         self.iqos.peripheral = peripheral
@@ -110,7 +127,7 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 	}
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        print("Failed to connect to \(peripheral.name ?? "Unknown")")
+        container.boot.addMsg(Message(text: "Failed to connect to \(peripheral.name ?? "Unknown")"))
         return
     }
 
@@ -181,14 +198,15 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
     func run() {
         onConnected = {
-            print("Gathering IQOS data...")
+            // print("Gathering IQOS data...")
+            self.container.boot.addMsg(Message(text: "Gathering IQOS data..."))
             self.discover()
             self.onDiscovered = {
                 // _ = self.discoveredCharacteristics.map { self.iqosIlumaI.initFromCharacteristic(characteristic: $0) }
                 self.discoveredCharacteristics.forEach { characteristic in
                     self.iqosIlumaI.initFromCharacteristic(characteristic: characteristic)
                 }
-                self.onDone?()
+                self.container.$displayKind.wrappedValue = .main
             }
         }
     }

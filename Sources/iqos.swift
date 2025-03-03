@@ -1,5 +1,6 @@
 import Foundation
 import CoreBluetooth
+import SwiftTUI
 
 class IQOS: NSObject {
     var modelNumber: String = ""
@@ -12,20 +13,25 @@ class IQOS: NSObject {
     var peripheral: CBPeripheral?
     var scp_chara: CBCharacteristic?
 
+
     func setChargerBattery(characteristic: CBCharacteristic) {
         chargerBatteryState = characteristic.value![2]
     }
 
-    var isFullyfilled: Bool {
-        return modelNumber != "" && serialNumber != "" && softwareRevision != "" && manufacturerName != ""
-    }
-    var fullyfilledHandler: (() -> Void)?
-
     func initFromCharacteristic(characteristic: CBCharacteristic) {
         switch "\(characteristic.uuid)"
         {
-            case "Model Number String", "Serial Number String", "Software Revision String", "Manufacturer Name String":
+            case "Model Number String":
                 modelNumber = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
+
+            case "Serial Number String" :
+                serialNumber = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
+
+            case "Software Revision String":
+                softwareRevision = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
+
+            case "Manufacturer Name String":
+                manufacturerName = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
 
             // for charger battery capacity
             case "F8A54120-B041-11E4-9BE7-0002A5D5C51B":
@@ -39,7 +45,7 @@ class IQOS: NSObject {
                 scp_chara = characteristic
 
             default:
-                print("Unknown characteristic \(characteristic.uuid)")
+                break
         }
     }
 }
@@ -74,6 +80,7 @@ class IQOSIlumaI: IQOS {
         peripheral?.writeValue(second, for: scp_chara!, type: .withResponse)
         peripheral?.writeValue(third, for: scp_chara!, type: .withResponse)
     }
+
     func disableSmartgesture() {
         // 21:47:70100
         let first: Data = Data([0x00, 0xc9, 0x48, 0x05, 0x2f, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0xeb])

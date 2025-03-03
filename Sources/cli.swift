@@ -1,4 +1,6 @@
 import Foundation
+import SwiftTUI
+
 struct Cli {
     let arguments: [String]
     let ble = BluetoothCLI()
@@ -15,9 +17,11 @@ struct Cli {
 
     func run() {
         ble.run()
-        ble.onDone = {
-            print(ble.iqosIlumaI)
-        }
+        Application(rootView: ble.container).start()
+        // ble.onDone = {
+        //     // print(ble.iqosIlumaI)
+        //     // ble.iqosIlumaI.view()
+        // }
         RunLoop.main.run()
     }
 }
