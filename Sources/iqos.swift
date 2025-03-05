@@ -1,6 +1,5 @@
 import Foundation
 import CoreBluetooth
-import SwiftTUI
 
 class IQOS: NSObject {
     var modelNumber: String = ""
@@ -11,11 +10,18 @@ class IQOS: NSObject {
     var chargerBatteryState: UInt8 = 0
     var scpCharacteristicUUID: CBUUID?
     var peripheral: CBPeripheral?
+
+    // characteristics
     var scp_chara: CBCharacteristic?
+    var battery_chara: CBCharacteristic?
 
 
     func setChargerBattery(characteristic: CBCharacteristic) {
         chargerBatteryState = characteristic.value![2]
+    }
+
+    func reloadBatteryState() {
+        peripheral?.readValue(for: battery_chara!)
     }
 
     func initFromCharacteristic(characteristic: CBCharacteristic) {
@@ -39,6 +45,7 @@ class IQOS: NSObject {
                 // ["0f", "00", "4b", "18", "54", "0f", "64"]
                 //               ↑ indicate battery level
 
+                battery_chara = characteristic
                 setChargerBattery(characteristic: characteristic)
 
             case "E16C6E20-B041-11E4-A4C3-0002A5D5C51B":

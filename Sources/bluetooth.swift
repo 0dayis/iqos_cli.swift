@@ -46,14 +46,12 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
     
     func startScan() {
-        // print("Scanning...")
         print("Scanning...")
         centralManager.scanForPeripherals(withServices: nil, options: nil)
     }
     
     func stopScan() {
         centralManager.stopScan()
-        // print("Stopped scan.")
         print("Stopped scan.")
     }
 
@@ -85,7 +83,6 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     func connectToDevice(named deviceName: String) {
         centralManager.scanForPeripherals(withServices: nil, options: nil)
-        // print("Scanning for \(deviceName)...")
         print("Scanning for \(deviceName)...")
     }
 
@@ -104,7 +101,6 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 	) {
 
 		if let name = peripheral.name, name.starts(with: "IQOS") {
-			// print("Found target device \(name), connecting...")
             print("Found target device \(name), connecting...")
             iqosIlumaI.peripheral = peripheral
             centralManager.stopScan()
@@ -113,7 +109,6 @@ class BluetoothCLI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 	}
 
 	func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-		// print("Connected to \(peripheral.name ?? "Unknown")")
         print("Connected to \(peripheral.name ?? "Unknown")")
 		peripheral.delegate = self
         self.connectedIqos = peripheral

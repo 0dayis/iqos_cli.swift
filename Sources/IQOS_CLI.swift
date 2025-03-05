@@ -5,8 +5,10 @@ import Foundation
 @main
 struct IQOSCli {
     static func main() {
-        let cli = Cli.init()
-        cli.run()
+        // let cli = Cli.init()
+        // cli.run()
+        let console = Console()
+        console.run()
             // print("\n--- IQOS CLI ---")
             // print("1: Start Scanning")
             // print("2: Stop Scanning")
