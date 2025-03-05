@@ -20,6 +20,36 @@ extension IQOSCommand {
         }
     }
 
+    struct FindMyIQOS: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "findmyiqos",
+            abstract: "Find my IQOS"
+        )
+
+        @Argument(help: "Stop finding my IQOS")
+        var stop: String?
+
+        @Option(name: .shortAndLong, help: "Interval in seconds")
+        var interval: Int?
+
+        mutating func run(iqos: IQOS) {
+            if let stop = stop {
+                if stop == "stop" {
+                        iqos.stopViberation()
+                        print("Stop finding my IQOS")
+                }
+            } else {
+                print("Finding my IQOS...")
+                iqos.viberation()
+                if let interval = interval {
+                    sleep(UInt32(interval))
+                    iqos.stopViberation()
+                    print("Stop finding my IQOS")
+                }
+            }
+        }
+    }
+
     struct BrightnessCommand: ParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "brightness",
@@ -84,7 +114,12 @@ struct IQOSCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "iqos",
         abstract: "IQOS CLI",
-        subcommands: [BatteryCommand.self, BrightnessCommand.self, SmartgestureCommand.self]
+        subcommands: [
+            BatteryCommand.self,
+            BrightnessCommand.self,
+            SmartgestureCommand.self,
+            FindMyIQOS.self
+        ]
     )
 }
 
@@ -117,6 +152,8 @@ struct Console {
                         case var com as IQOSCommand.BrightnessCommand:
                             com.run(iqos: ble.iqosIlumaI)
                         case var com as IQOSCommand.SmartgestureCommand:
+                            com.run(iqos: ble.iqosIlumaI)
+                        case var com as IQOSCommand.FindMyIQOS:
                             com.run(iqos: ble.iqosIlumaI)
                         default:
                             print("Unknown command")
