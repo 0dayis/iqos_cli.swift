@@ -49,12 +49,42 @@ extension IQOSCommand {
             }
         }
     }
+
+    struct SmartgestureCommand: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "smartgesture",
+            abstract: "Control the smartgesture"
+        )
+
+        enum SmartgestureKind: String, ExpressibleByArgument {
+            case enable 
+            case disable
+        }
+
+        @Argument(help: "On or off smartgesture")
+        var kind: SmartgestureKind?
+
+        mutating func run(iqos: IQOSIlumaI) {
+            if let kind = kind {
+                switch kind {
+                    case .enable:
+                        iqos.enableSmartgesture()
+                        print("Setting smartgesture to enable")
+                    case .disable:
+                        iqos.disableSmartgesture()
+                        print("Setting smartgesture to disable")
+                }
+            } else {
+                print("Please specify a smartgesture kind")
+            }
+        }
+    }
 }
 struct IQOSCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "iqos",
         abstract: "IQOS CLI",
-        subcommands: [BatteryCommand.self, BrightnessCommand.self]
+        subcommands: [BatteryCommand.self, BrightnessCommand.self, SmartgestureCommand.self]
     )
 }
 
@@ -85,6 +115,8 @@ struct Console {
                         case var com as IQOSCommand.BatteryCommand:
                             com.run(iqos: ble.iqosIlumaI)
                         case var com as IQOSCommand.BrightnessCommand:
+                            com.run(iqos: ble.iqosIlumaI)
+                        case var com as IQOSCommand.SmartgestureCommand:
                             com.run(iqos: ble.iqosIlumaI)
                         default:
                             print("Unknown command")
