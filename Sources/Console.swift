@@ -130,6 +130,7 @@ struct Console {
         ble.onDone = {
             while true {
                 print("iqos> ", terminator: "")
+                fflush(stdout)
                 guard let input = readLine() else { continue }
 
                 if input == "quit" || input == "exit" {
