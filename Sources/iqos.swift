@@ -55,6 +55,16 @@ class IQOS: NSObject {
                 break
         }
     }
+
+    func viberation() {
+        let payload: Data = Data([0x00, 0xc0, 0x45, 0x22, 0x01, 0x1e, 0x00, 0x00, 0xc3])
+        peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
+    }
+
+    func stopViberation() {
+        let payload: Data = Data([0x00, 0xc0, 0x45, 0x22, 0x00, 0x1e, 0x00, 0x00, 0xd5])
+        peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
+    }
 }
 
 class IQOSIlumaI: IQOS {
