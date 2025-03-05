@@ -68,6 +68,16 @@ class IQOS: NSObject {
 }
 
 class IQOSIlumaI: IQOS {
+    func enableFlexpuff() {
+        let payload: Data = Data([0x00, 0xd2, 0x45, 0x22, 0x03, 0x01, 0x00, 0x00, 0x0A])
+        peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
+    }
+
+    func disableFlexpuff() {
+        let payload: Data = Data([0x00, 0xd2, 0x45, 0x22, 0x03, 0x00, 0x00, 0x00, 0x0A])
+        peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
+    }
+
     func toBrightnessHigh() {
         // let first: Data = Data([0x00, 0xc0, 0x01, 0x21, 0xf2])
         // let second: Data = Data([0x00, 0xc0, 0x00, 0x00, 0x01, 0x07])
@@ -79,12 +89,33 @@ class IQOSIlumaI: IQOS {
         // peripheral.writeValue(third, for: characteristic, type: CBCharacteristicWriteType.withResponse)
         // peripheral.writeValue(fourth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
         // peripheral.writeValue(fifth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-        let payload: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x64, 0x00, 0x00, 0x00, 0x4f])
-        peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
+
+        // let payload: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x64, 0x00, 0x00, 0x00, 0x4f])
+        let first: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x64, 0x00, 0x00, 0x00, 0x4f])
+        let second: Data = Data([0x00, 0xc0, 0x02, 0x23, 0xc3])
+        let third: Data = Data([0x00, 0xc9, 0x44, 0x24, 0x64, 0x00, 0x00, 0x00, 0x34])
+        peripheral?.writeValue(first, for: scp_chara!, type: .withResponse)
+        peripheral?.writeValue(second, for: scp_chara!, type: .withResponse)
+        peripheral?.writeValue(third, for: scp_chara!, type: .withResponse)
     }
 
     func toBrightnessLow() {
-        let payload: Data = Data([0x00, 0x08, 0x84, 0x24, 0x1e, 0x00, 0x00, 0x00, 0x00])
+        // let payload: Data = Data([0x00, 0x08, 0x84, 0x24, 0x1e, 0x00, 0x00, 0x00, 0x00])
+        let first: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x1e, 0x00, 0x00, 0x00, 0xe1])
+        let second: Data = Data([0x00, 0xc0, 0x02, 0x23, 0xc3])
+        let third: Data = Data([0x00, 0xc9, 0x44, 0x24, 0x1e, 0x00, 0x00, 0x00, 0x9a])
+        peripheral?.writeValue(first, for: scp_chara!, type: .withResponse)
+        peripheral?.writeValue(second, for: scp_chara!, type: .withResponse)
+        peripheral?.writeValue(third, for: scp_chara!, type: .withResponse)
+    }
+
+    func enableAutostart() {
+        let payload = Data([0x00, 0xc9, 0x47, 0x24, 0x01, 0x01, 0x00, 0x00, 0x3f])
+        peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
+    }
+
+    func disableAutostart() {
+        let payload = Data([0x00, 0xc9, 0x47, 0x24, 0x01, 0x00, 0x00, 0x00, 0x54])
         peripheral?.writeValue(payload, for: scp_chara!, type: .withResponse)
     }
 
