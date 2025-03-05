@@ -20,6 +20,36 @@ extension IQOSCommand {
         }
     }
 
+    struct Flexpuff: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "flexpuff",
+            abstract: "Control the flexpuff"
+        )
+
+        enum FlexpuffKind: String, ExpressibleByArgument {
+            case enable 
+            case disable
+        }
+
+        @Argument(help: "enable or disable flexpuff")
+        var kind: FlexpuffKind?
+
+        mutating func run(iqos: IQOSIlumaI) {
+            if let kind = kind {
+                switch kind {
+                    case .enable:
+                        iqos.enableFlexpuff()
+                        print("Setting flexpuff to enable")
+                    case .disable:
+                        iqos.disableFlexpuff()
+                        print("Setting flexpuff to disable")
+                }
+            } else {
+                print("Please specify a flexpuff kind")
+            }
+        }
+    }
+
     struct FindMyIQOS: ParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "findmyiqos",
@@ -80,6 +110,36 @@ extension IQOSCommand {
         }
     }
 
+    struct Autostart: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "autostart",
+            abstract: "Control the autostart"
+        )
+
+        enum AutostartKind: String, ExpressibleByArgument {
+            case enable 
+            case disable
+        }
+
+        @Argument(help: "On or off autostart")
+        var kind: AutostartKind?
+
+        mutating func run(iqos: IQOSIlumaI) {
+            if let kind = kind {
+                switch kind {
+                    case .enable:
+                        iqos.enableAutostart()
+                        print("Setting autostart to enable")
+                    case .disable:
+                        iqos.disableAutostart()
+                        print("Setting autostart to disable")
+                }
+            } else {
+                print("Please specify a autostart kind")
+            }
+        }
+    }
+
     struct SmartgestureCommand: ParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "smartgesture",
@@ -110,6 +170,7 @@ extension IQOSCommand {
         }
     }
 }
+
 struct IQOSCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "iqos",
@@ -118,7 +179,9 @@ struct IQOSCommand: ParsableCommand {
             BatteryCommand.self,
             BrightnessCommand.self,
             SmartgestureCommand.self,
-            FindMyIQOS.self
+            FindMyIQOS.self,
+            Autostart.self,
+            Flexpuff.self
         ]
     )
 }
@@ -155,6 +218,10 @@ struct Console {
                         case var com as IQOSCommand.SmartgestureCommand:
                             com.run(iqos: ble.iqosIlumaI)
                         case var com as IQOSCommand.FindMyIQOS:
+                            com.run(iqos: ble.iqosIlumaI)
+                        case var com as IQOSCommand.Autostart:
+                            com.run(iqos: ble.iqosIlumaI)
+                        case var com as IQOSCommand.Flexpuff:
                             com.run(iqos: ble.iqosIlumaI)
                         default:
                             print("Unknown command")
