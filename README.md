@@ -1,1 +1,1 @@
-# iqos_cli
+# IQOS CLI
