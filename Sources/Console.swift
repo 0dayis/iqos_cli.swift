@@ -20,6 +20,30 @@ extension IQOSCommand {
         }
     }
 
+    struct Lock: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "lock",
+            abstract: "Lock the IQOS"
+        )
+
+        mutating func run(iqos: IQOS) {
+            iqos.lock()
+            print("Locked the IQOS")
+        }
+    }
+
+    struct UnLock: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "unlock",
+            abstract: "Unlock the IQOS"
+        )
+
+        mutating func run(iqos: IQOS) {
+            iqos.unlock()
+            print("Unlocked the IQOS")
+        }
+    }
+
     struct Flexpuff: ParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "flexpuff",
@@ -119,6 +143,7 @@ extension IQOSCommand {
         enum AutostartKind: String, ExpressibleByArgument {
             case enable 
             case disable
+            case test
         }
 
         @Argument(help: "On or off autostart")
@@ -133,6 +158,9 @@ extension IQOSCommand {
                     case .disable:
                         iqos.disableAutostart()
                         print("Setting autostart to disable")
+                    case .test:
+                        iqos.test()
+                        print("Testing")
                 }
             } else {
                 print("Please specify a autostart kind")
@@ -181,7 +209,9 @@ struct IQOSCommand: ParsableCommand {
             SmartgestureCommand.self,
             FindMyIQOS.self,
             Autostart.self,
-            Flexpuff.self
+            Flexpuff.self,
+            Lock.self,
+            UnLock.self
         ]
     )
 }
@@ -222,6 +252,10 @@ struct Console {
                         case var com as IQOSCommand.Autostart:
                             com.run(iqos: ble.iqosIlumaI)
                         case var com as IQOSCommand.Flexpuff:
+                            com.run(iqos: ble.iqosIlumaI)
+                        case var com as IQOSCommand.Lock:
+                            com.run(iqos: ble.iqosIlumaI)
+                        case var com as IQOSCommand.UnLock:
                             com.run(iqos: ble.iqosIlumaI)
                         default:
                             print("Unknown command")
