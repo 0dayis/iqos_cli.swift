@@ -149,7 +149,6 @@ class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard let characteristics = service.characteristics else { print("Unable to discover characteristics:"); return }
         for characteristic in characteristics {
-            peripheral.readValue(for: characteristic)
             if characteristic.properties.contains(.notify) {
                 peripheral.setNotifyValue(true, for: characteristic)
             }
