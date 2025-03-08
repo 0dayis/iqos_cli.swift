@@ -87,8 +87,8 @@ extension IQOSCommand {
                         iqos.disableAutostart()
                         print("Setting autostart to disable")
                     case .test:
-                        // iqos.test()
-                        print("Testing")
+                        iqos.test()
+                        // print("Testing")
                 }
             } else {
                 print("Please specify a autostart kind")

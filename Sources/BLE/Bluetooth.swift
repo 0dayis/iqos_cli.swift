@@ -44,6 +44,10 @@ class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         print("Stopped scan.")
     }
 
+    func readValue(for characteristic: CBCharacteristic) {
+        iqos.peripheral?.readValue(for: characteristic)
+    }
+
     func discoverServices(peripheral: CBPeripheral) {
         discoveredServices.forEach { service in
             peripheral.discoverCharacteristics(nil, for: service.cbService)
@@ -145,7 +149,10 @@ class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard let characteristics = service.characteristics else { print("Unable to discover characteristics:"); return }
         for characteristic in characteristics {
-            // peripheral.readValue(for: characteristic)
+            peripheral.readValue(for: characteristic)
+            if characteristic.properties.contains(.notify) {
+                peripheral.setNotifyValue(true, for: characteristic)
+            }
             discoveredCharacteristics.append(characteristic)
             discoveredServices.first(where: { $0.cbService == service })?.isDiscovered = true
         }
@@ -165,35 +172,17 @@ class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        print("gomigayo")
         if let error = error {
             print("Failed to read value for \(characteristic.uuid): \(error.localizedDescription)")
             return
         }
-        // switch "\(characteristic.uuid)"
-        // {
-        //     case "F8A54120-B041-11E4-9BE7-0002A5D5C51B":
-        //         // example
-        //         // ["0f", "00", "4b", "18", "54", "0f", "64"]
-        //         //               ↑ indicate battery level
-
-        //         iqos.setChargerBattery(characteristic: characteristic)
-            
-        //     case "E16C6E20-B041-11E4-A4C3-0002A5D5C51B":
-        //         // example
-        //         // ["0f", "00", "4b", "18", "54", "0f", "64"]
-        //         //               ↑ indicate battery level
-
-        //         print("SCP: \(characteristic.value ?? Data())")
-        //     default:
-        //         print("UUID: \(characteristic.uuid)")
-        //         print("Value: \(characteristic.value ?? Data())")
-        //         // break
-        // }
-        iqos.register = "simeji"
-        print("UUID: \(characteristic.uuid)")
-        print("binary value: ", characteristic.value?.map { String(format: "%02hhx", $0) } ?? "nil")
-        iqos.register = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
-
+        // iqos.register = "simeji"
+        // print("UUID: \(characteristic.uuid)")
+        // print("binary value: ", characteristic.value?.map { String(format: "%02hhx", $0) } ?? "nil")
+        // iqos.register = String(decoding: characteristic.value ?? Data(), as: UTF8.self)
+        // let data = characteristic.value ?? Data()
+        // print("Received notification from \(characteristic.uuid): \(data)")
     }
 
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {

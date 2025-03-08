@@ -32,41 +32,20 @@ class IQOSIlumaI: IQOS {
     private let testSig: Data = Data([0x00, 0xc9, 0x10, 0x02, 0x00, 0x02, 0xb9, 0xa5])
 
     func enableFlexpuff() {
-        // iqosIlumaIble.peripheral?.writeValue(iqosIlumaIble.enableFlexpuffSig, for: iqosIlumaIble.scp_chara!, type: .withResponse)
         iqosble.peripheral?.writeValue(enableFlexpuffSignal, for: iqosble.scp_chara!, type: .withResponse)
     }
 
     func disableFlexpuff() {
-        // iqosIlumaIble.peripheral?.writeValue(iqosIlumaIble.disableFlexpuffSig, for: iqosIlumaIble.scp_chara!, type: .withResponse)
         iqosble.peripheral?.writeValue(disableFlexpuffSignal, for: iqosble.scp_chara!, type: .withResponse)
     }
 
     func toBrightnessHigh() {
-        // let first: Data = Data([0x00, 0xc0, 0x01, 0x21, 0xf2])
-        // let second: Data = Data([0x00, 0xc0, 0x00, 0x00, 0x01, 0x07])
-        // let third: Data = Data([0x00, 0xc0, 0x04, 0x06, 0x01, 0x00, 0x00, 0x00, 0xf9])
-        // let fourth: Data = Data([0x00, 0xc0, 0x01, 0x00, 0x15])
-        // let fifth: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x64, 0x00, 0x00, 0x00, 0x4f])
-        // peripheral.writeValue(first, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-        // peripheral.writeValue(second, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-        // peripheral.writeValue(third, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-        // peripheral.writeValue(fourth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-        // peripheral.writeValue(fifth, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-
-        // let payload: Data = Data([0x00, 0xc0, 0x46, 0x23, 0x64, 0x00, 0x00, 0x00, 0x4f])
-        // iqosIlumaIble.brightnessHighSigs.forEach { signal in
-        //     iqosIlumaIble.peripheral?.writeValue(signal, for: iqosIlumaIble.scp_chara!, type: .withResponse)
-        // }
         brightnessHighSignals.forEach { signal in
             iqosble.peripheral?.writeValue(signal, for: iqosble.scp_chara!, type: .withResponse)
         }
     }
 
     func toBrightnessLow() {
-        // let payload: Data = Data([0x00, 0x08, 0x84, 0x24, 0x1e, 0x00, 0x00, 0x00, 0x00])
-        // iqosIlumaIble.brightnessLowSigs.forEach { signal in
-        //     iqosIlumaIble.peripheral?.writeValue(signal, for: iqosIlumaIble.scp_chara!, type: .withResponse)
-        // }
         brightnessLowSignals.forEach { signal in
             iqosble.peripheral?.writeValue(signal, for: iqosble.scp_chara!, type: .withResponse)
         }
@@ -78,36 +57,29 @@ class IQOSIlumaI: IQOS {
     }
 
     func disableAutostart() {
-        // iqosIlumaIble.peripheral?.writeValue(iqosIlumaIble.disableAutostartSig, for: iqosIlumaIble.scp_chara!, type: .withResponse)
         iqosble.peripheral?.writeValue(disableAutostartSignal, for: iqosble.scp_chara!, type: .withResponse)
     }
 
     func enableSmartgesture() {
-        // iqosIlumaIble.enableSmartgestureSigs.forEach { signal in
-        //     iqosIlumaIble.peripheral?.writeValue(signal, for: iqosIlumaIble.scp_chara!, type: .withResponse)
-        // }
         enableSmartgestureSignals.forEach { signal in
             iqosble.peripheral?.writeValue(signal, for: iqosble.scp_chara!, type: .withResponse)
         }
     }
 
     func disableSmartgesture() {
-        // iqosIlumaIble.disableSmartgestureSigs.forEach { signal in
-        //     iqosIlumaIble.peripheral?.writeValue(signal, for: iqosIlumaIble.scp_chara!, type: .withResponse)
-        // }
         disableSmartgestureSignals.forEach { signal in
             iqosble.peripheral?.writeValue(signal, for: iqosble.scp_chara!, type: .withResponse)
         }
     }
 
-    // func test() {
-    //     let signal: Data = Data([0x00, 0xc9, 0x10, 0x02, 0x00, 0x02, 0xb9, 0xa5])
-    //     peripheral?.writeValue(signal, for: iqosble.scp_chara!, type: .withResponse)
+    func test() {
 
-    //     sleep(UInt32(3))
-    //     iqosble.peripheral?.readValue(for: scp_chara!)
-    //     print("register: \(register)")
+        iqosble.peripheral?.writeValue(testSig, for: iqosble.scp_chara!, type: .withResponse)
+        iqosble.peripheral?.readValue(for: iqosble.scp_chara!)
+        sleep(1)
+        let chara = iqosble.scp_chara?.value
+        print("binary value: ", chara?.map { String(format: "%02hhx", $0) } ?? "nil")
     //     // print("after sleep")
     //     // peripheral?.readValue(for: scp_chara!)
-    // }
+    }
 }

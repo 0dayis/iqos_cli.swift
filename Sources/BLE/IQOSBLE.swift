@@ -20,7 +20,7 @@ class IQOSBLE {
     }
 
     func reloadBatteryState() {
-        peripheral?.readValue(for: battery_chara!)
+        setChargerBattery(characteristic: battery_chara!)
     }
 
     func from<T: CBCharacteristic>(characteristic: T) {

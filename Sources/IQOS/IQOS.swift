@@ -23,8 +23,8 @@ class IQOS: NSObject {
     }
 
     func batteryStatus() -> UInt8 {
-        iqosble.peripheral?.readValue(for: iqosble.battery_chara!)
-        return 9
+        iqosble.reloadBatteryState()
+        return self.iqosble.chargerBatteryState
     }
 
     func from<T: IQOSBLE>(iqosble: T) {
