@@ -1,13 +1,7 @@
 import Foundation
 import CoreBluetooth
 
-protocol IQOSBLEProtocol {
-    var peripheral: CBPeripheral? { get set }
-    var scp_chara: CBCharacteristic? { get set }
-    var battery_chara: CBCharacteristic? { get set }
-}
-
-class IQOSBLE: IQOSBLEProtocol {
+class IQOSBLE {
     var modelNumber: String = ""
     var serialNumber: String = ""
     var softwareRevision: String = ""
