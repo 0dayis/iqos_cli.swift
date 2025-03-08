@@ -5,14 +5,6 @@ protocol IQOSBLEProtocol {
     var peripheral: CBPeripheral? { get set }
     var scp_chara: CBCharacteristic? { get set }
     var battery_chara: CBCharacteristic? { get set }
-    
-    // 共通のシグナルなど
-    var confirmationSignal: Data { get }
-    var startViberationSignal: Data { get }
-    var stopViberationSignal: Data { get }
-    var lockSignals: [Data] { get }
-    var unlockSignals: [Data] { get }
-    // 他の必要なプロパティやメソッド
 }
 
 class IQOSBLE: IQOSBLEProtocol {
@@ -29,18 +21,6 @@ class IQOSBLE: IQOSBLEProtocol {
     var scp_chara: CBCharacteristic?
     var battery_chara: CBCharacteristic?
 
-    // signals for basic IQOS
-    public let confirmationSignal: Data = Data([0x00, 0xc0, 0x01, 0x00, 0x15])
-    public let startViberationSignal: Data = Data([0x00, 0xc0, 0x45, 0x22, 0x01, 0x1e, 0x00, 0x00, 0xc3])
-    public let stopViberationSignal: Data = Data([0x00, 0xc0, 0x45, 0x22, 0x00, 0x1e, 0x00, 0x00, 0xd5])
-    public let lockSignals: [Data] = [
-        Data([0x00, 0xc9, 0x44, 0x04, 0x02, 0xff, 0x00, 0x00, 0x5a]),
-        Data([0x00, 0xc9, 0x00, 0x04, 0x1c])
-    ]
-    public let unlockSignals: [Data] = [
-        Data([0x00, 0xc9, 0x44, 0x04, 0x00, 0x00, 0x00, 0x00, 0x5d]),
-        Data([0x00, 0xc9, 0x00, 0x04, 0x1c])
-    ]
 
 
     func setChargerBattery(characteristic: CBCharacteristic) {
@@ -51,7 +31,7 @@ class IQOSBLE: IQOSBLEProtocol {
         peripheral?.readValue(for: battery_chara!)
     }
 
-    func initFromCharacteristic(characteristic: CBCharacteristic) {
+    func from<T: CBCharacteristic>(characteristic: T) {
         switch "\(characteristic.uuid)"
         {
             case "Model Number String":
