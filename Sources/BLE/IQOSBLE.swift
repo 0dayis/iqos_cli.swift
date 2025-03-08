@@ -15,8 +15,6 @@ class IQOSBLE {
     var scp_chara: CBCharacteristic?
     var battery_chara: CBCharacteristic?
 
-
-
     func setChargerBattery(characteristic: CBCharacteristic) {
         chargerBatteryState = characteristic.value![2]
     }
