@@ -62,12 +62,17 @@ extension IQOSCommand {
                         print("Stop finding my IQOS")
                 }
             } else {
-                print("Finding my IQOS...")
                 iqos.viberation()
-                if let interval = interval {
-                    sleep(UInt32(interval))
-                    iqos.stopViberation()
-                    print("Stop finding my IQOS")
+                print("Press <Enter> key to stop")
+                while true {
+                    print("Finding> ", terminator: "")
+                    fflush(stdout)
+                    var input = readLine()
+                    if input != nil {
+                        iqos.stopViberation()
+                        print("Found my IQOS")
+                        break
+                    } 
                 }
             }
         }
