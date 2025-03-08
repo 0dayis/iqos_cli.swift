@@ -2,8 +2,6 @@ import Foundation
 import CoreBluetooth
 
 class IQOSIlumaI: IQOS {
-
-    // var iqosble: IQOSBLEProtocol
     private let enableFlexpuffSignal: Data = Data([0x00, 0xd2, 0x45, 0x22, 0x03, 0x01, 0x00, 0x00, 0x0A])
     private let disableFlexpuffSignal: Data = Data([0x00, 0xd2, 0x45, 0x22, 0x03, 0x00, 0x00, 0x00, 0x0A])
     private let brightnessHighSignals: [Data] = [
@@ -73,7 +71,6 @@ class IQOSIlumaI: IQOS {
     }
 
     func test() {
-
         iqosble.peripheral?.writeValue(testSig, for: iqosble.scp_chara!, type: .withResponse)
         iqosble.peripheral?.readValue(for: iqosble.scp_chara!)
         sleep(1)
